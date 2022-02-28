@@ -1,0 +1,87 @@
+pipeline {
+    agent any
+        stages {
+            stage('Parameters'){
+                steps {
+                    script {
+                    properties([
+                            parameters([
+                                [$class: 'ChoiceParameter', 
+                                    choiceType: 'PT_SINGLE_SELECT', 
+                                    description: 'Choose the running environment from the list', 
+                                    filterLength: 1, 
+                                    filterable: false, 
+                                    name: 'RUNNING_ENVIRONMENT', 
+                                    script: [
+                                        $class: 'GroovyScript', 
+                                        fallbackScript: [
+                                            classpath: [], 
+                                            sandbox: false, 
+                                            script: 
+                                                "return['Try again']"
+                                        ], 
+                                        script: [
+                                            classpath: [], 
+                                            sandbox: false, 
+                                            script: 
+                                                "return['Development','Staging','Live']"
+                                        ]
+                                    ]
+                                ],
+                                [$class: 'CascadeChoiceParameter', 
+                                    choiceType: 'PT_SINGLE_SELECT', 
+                            
+                                    name: 'PROJECT', 
+                                    referencedParameters: 'RUNNING_ENVIRONMENT', 
+                                    script: 
+                                        [$class: 'GroovyScript', 
+                                        
+                                        script: [
+                                                classpath: [], 
+                                                sandbox: false, 
+                                                script: '''
+                                                if (RUNNING_ENVIRONMENT.equals("Development")){
+                                                    return["language1",  "language2"]
+                                                }
+                                                else if(RUNNING_ENVIRONMENT.equals("Staging")){
+                                                    return["languageA", "languageB", "languageC"]
+                                                }
+                                                else if(RUNNING_ENVIRONMENT.equals("live")){
+                                                    return["languageP1", "languageP2", "languageP3"]
+                                                }
+                                                '''
+                                            ] 
+                                    ]
+                                ],
+                                [$class: 'DynamicReferenceParameter', 
+                                    choiceType: 'ET_ORDERED_LIST', 
+                                    
+                                    name: 'Output message', 
+                                    referencedParameters: 'RUNNING_ENVIRONMENT', 
+                                    script: 
+                                        [$class: 'GroovyScript', 
+                                        script: [
+                                            script: '''
+                                                    if (RUNNING_ENVIRONMENT.equals("Development")){
+                                                        return["Your selected running environment was Development with project language1, language2"]
+                                                    }
+                                                    else if(RUNNING_ENVIRONMENT.equals("Staging")){
+                                                        return["Your selected running environment was Development with project languageA, languageB,language"]
+                                                    }
+                                                    else if(RUNNING_ENVIRONMENT.equals("Live")){
+                                                        return["Your selected running environment was Development with project languageP1, languageP2,languageP3"]
+                                                    }
+                                                     else if((RUNNING_ENVIRONMENT.equals("Live") && (PROJECT.equals("languageP3"))){
+                                                        return["Your selected running environment was Development with project languageP1, languageP2,languageP2"]
+                                                    }
+                                                    '''
+                                                ]
+                                        ]
+                                ]
+                            ])
+                        ])
+                    }
+                }
+            }
+        }   
+}
